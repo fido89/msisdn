@@ -4,12 +4,11 @@ package restapi
 
 import (
 	"crypto/tls"
+	"msisdn/msisdn"
 	"net/http"
 
-	errors "github.com/go-openapi/errors"
-	runtime "github.com/go-openapi/runtime"
-	middleware "github.com/go-openapi/runtime/middleware"
-
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
 	"msisdn/swagger/restapi/operations"
 )
 
@@ -33,11 +32,7 @@ func configureAPI(api *operations.MsisdnAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	if api.ParseMsisdnHandler == nil {
-		api.ParseMsisdnHandler = operations.ParseMsisdnHandlerFunc(func(params operations.ParseMsisdnParams) middleware.Responder {
-			return middleware.NotImplemented("operation .ParseMsisdn has not yet been implemented")
-		})
-	}
+	api.ParseMsisdnHandler = operations.ParseMsisdnHandlerFunc(msisdn.ParseMsisdn)
 
 	api.ServerShutdown = func() {}
 
