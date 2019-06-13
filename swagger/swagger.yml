@@ -43,11 +43,11 @@ definitions:
     description: 'Object with parsed msisdn values'
     type: object
     properties:
-      MNO:
+      MNO_id:
         type: string
-      CDC:
+      country_code:
         type: string
-      SN:
+      country_id:
         type: string
-      CI:
+      subscriber_number:
         type: string
