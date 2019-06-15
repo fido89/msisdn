@@ -39,6 +39,8 @@ definitions:
         type: integer
       message:
         type: string
+    required:
+      - message
   ParsedMsisdn:
     description: 'Object with parsed msisdn values'
     type: object

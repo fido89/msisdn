@@ -67,6 +67,9 @@ func init() {
     "NotFound": {
       "description": "Error object",
       "type": "object",
+      "required": [
+        "message"
+      ],
       "properties": {
         "code": {
           "type": "integer"
@@ -146,6 +149,9 @@ func init() {
     "NotFound": {
       "description": "Error object",
       "type": "object",
+      "required": [
+        "message"
+      ],
       "properties": {
         "code": {
           "type": "integer"

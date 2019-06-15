@@ -8,7 +8,9 @@ package models
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // NotFound Error object
@@ -19,11 +21,30 @@ type NotFound struct {
 	Code int64 `json:"code,omitempty"`
 
 	// message
-	Message string `json:"message,omitempty"`
+	// Required: true
+	Message *string `json:"message"`
 }
 
 // Validate validates this not found
 func (m *NotFound) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateMessage(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *NotFound) validateMessage(formats strfmt.Registry) error {
+
+	if err := validate.Required("message", "body", m.Message); err != nil {
+		return err
+	}
+
 	return nil
 }
 
