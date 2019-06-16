@@ -49,7 +49,7 @@ definitions:
         type: string
       country_code:
         type: string
-      country_id:
-        type: string
       subscriber_number:
+          type: string
+      country_id:
         type: string

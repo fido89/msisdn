@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
+	"msisdn/data"
 	"msisdn/swagger/models"
 	"msisdn/swagger/restapi/operations"
+	"strings"
 )
 
 func ParseMsisdn(params operations.ParseMsisdnParams) middleware.Responder {
@@ -25,15 +27,15 @@ func ParseMsisdn(params operations.ParseMsisdnParams) middleware.Responder {
 }
 
 func getParsedMsisdn(msisdn string) (*models.ParsedMsisdn, error) {
-	if msisdn == "error" {
+	var carrier = data.GetCarrier(msisdn)
+	if carrier == nil {
 		return nil, errors.New(fmt.Sprintf("MSISDN %s can't be parsed", msisdn))
 	}
-
-	var test = &models.ParsedMsisdn{
-		CountryCode:      msisdn,
+	var parsedMsisdn = &models.ParsedMsisdn{
+		CountryCode:      carrier.CountryCode,
 		CountryID:        msisdn,
-		MNOID:            msisdn,
-		SubscriberNumber: msisdn,
+		MNOID:            carrier.CarrierMNO,
+		SubscriberNumber: strings.TrimLeft(strings.TrimLeft(msisdn, carrier.CountryCode), carrier.CarrierMNO),
 	}
-	return test, nil
+	return parsedMsisdn, nil
 }
