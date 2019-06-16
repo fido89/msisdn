@@ -32,7 +32,7 @@ func main() {
 	parser.ShortDescription = "msisdn"
 	parser.LongDescription = "msisdn parser"
 
-	data.LoadCarrierData()
+	data.LoadData()
 
 	server.ConfigureFlags()
 	for _, optsGroup := range api.CommandLineOptionsGroups {

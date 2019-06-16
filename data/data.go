@@ -2,6 +2,8 @@ package data
 
 import (
 	"bufio"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,12 +13,19 @@ import (
 var carriers map[string]string
 var carrierMaxLenght = 0
 
+var countryIsoCodes map[string]string
+
 type carrier struct {
 	CountryCode string
 	CarrierMNO  string
 }
 
-func LoadCarrierData() {
+func LoadData() {
+	loadCarrierData()
+	loadCountryIsoIds()
+}
+
+func loadCarrierData() {
 	carriers = make(map[string]string)
 	root := "./data/carrier"
 	files, err := ioutil.ReadDir(root)
@@ -50,12 +59,36 @@ func LoadCarrierData() {
 	}
 }
 
+func loadCountryIsoIds() {
+	jsonFile, err := os.Open("./data/country-calling-codes.json")
+	if err != nil {
+		log.Fatalf("failed opening file: %s", err)
+	}
+
+	countryIsoCodes = make(map[string]string)
+	var results []map[string]interface{}
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	json.Unmarshal(byteValue, &results)
+	for _, result := range results {
+		countryIsoCodes[fmt.Sprintf("%v", result["callingCode"])] = fmt.Sprintf("%v", result["code"])
+	}
+}
+
 func GetCarrier(msisdn string) *carrier {
 	for i := carrierMaxLenght; i > 0; i-- {
 		cc, exists := carriers[msisdn[:i]]
 		if exists {
 			return &carrier{CountryCode: cc, CarrierMNO: strings.TrimLeft(msisdn[:i], cc)}
 		}
+	}
+	return nil
+}
+
+func GetCountryIsoCode(callingCode string) *string {
+	iso, exists := countryIsoCodes[callingCode]
+	if exists {
+		return &iso
 	}
 	return nil
 }

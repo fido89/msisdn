@@ -1,0 +1,1 @@
+Data for other country carriers can be found at https://github.com/google/libphonenumber/tree/master/resources/carrier/en

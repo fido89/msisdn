@@ -31,9 +31,10 @@ func getParsedMsisdn(msisdn string) (*models.ParsedMsisdn, error) {
 	if carrier == nil {
 		return nil, errors.New(fmt.Sprintf("MSISDN %s can't be parsed", msisdn))
 	}
+	var isoCode = data.GetCountryIsoCode(carrier.CountryCode)
 	var parsedMsisdn = &models.ParsedMsisdn{
 		CountryCode:      carrier.CountryCode,
-		CountryID:        msisdn,
+		CountryID:        *isoCode,
 		MNOID:            carrier.CarrierMNO,
 		SubscriberNumber: strings.TrimLeft(strings.TrimLeft(msisdn, carrier.CountryCode), carrier.CarrierMNO),
 	}
