@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -34,6 +35,10 @@ func loadCarrierData() {
 	}
 
 	for _, f := range files {
+		if filepath.Ext(f.Name()) != ".txt" {
+			continue
+		}
+
 		file, err := os.Open(root + "/" + f.Name())
 
 		if err != nil {
@@ -76,7 +81,12 @@ func loadCountryIsoIds() {
 }
 
 func GetCarrier(msisdn string) *carrier {
-	for i := carrierMaxLenght; i > 0; i-- {
+	var carrierMaxLenghtLocal = carrierMaxLenght
+	if len(msisdn) < carrierMaxLenghtLocal {
+		carrierMaxLenghtLocal = len(msisdn)
+	}
+
+	for i := carrierMaxLenghtLocal; i > 0; i-- {
 		cc, exists := carriers[msisdn[:i]]
 		if exists {
 			return &carrier{CountryCode: cc, CarrierMNO: strings.TrimLeft(msisdn[:i], cc)}
