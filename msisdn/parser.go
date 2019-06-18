@@ -8,11 +8,12 @@ import (
 	"msisdn/data"
 	"msisdn/swagger/models"
 	"msisdn/swagger/restapi/operations"
+	"regexp"
 	"strings"
 )
 
 func ParseMsisdn(params operations.ParseMsisdnParams) middleware.Responder {
-	var msisdn string = params.Msisdn
+	var msisdn = getClearMsisdn(params.Msisdn)
 
 	parsedMsisdn, err := getParsedMsisdn(msisdn)
 	if err != nil {
@@ -39,4 +40,15 @@ func getParsedMsisdn(msisdn string) (*models.ParsedMsisdn, error) {
 		SubscriberNumber: strings.TrimLeft(strings.TrimLeft(msisdn, carrier.CountryCode), carrier.CarrierMNO),
 	}
 	return parsedMsisdn, nil
+}
+
+func getClearMsisdn(msisdn string) string {
+	// Get only numbers in msisdn strins
+	re := regexp.MustCompile("[0-9]+")
+	var clearMsisdnArray = re.FindAllString(msisdn, -1)
+	var clearMsisdn = strings.Join(clearMsisdnArray, "")
+	// Clear internation prefix
+	clearMsisdn = strings.TrimLeft(clearMsisdn, "0")
+
+	return clearMsisdn
 }
