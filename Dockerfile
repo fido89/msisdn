@@ -7,7 +7,8 @@ RUN apk add --no-cache git \
 COPY . /go/src/msisdn
 
 WORKDIR /go/src/msisdn
+
 RUN dep ensure
-RUN go test -v ./...
+RUN CGO_ENABLED=0 go test -v ./...
 RUN go build ./swagger/cmd/msisdn-server
 ENTRYPOINT ["./msisdn-server"]
