@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 
-	"msisdn/data"
 	"msisdn/swagger/restapi"
 	"msisdn/swagger/restapi/operations"
 
@@ -31,8 +30,6 @@ func main() {
 	parser := flags.NewParser(server, flags.Default)
 	parser.ShortDescription = "msisdn"
 	parser.LongDescription = "msisdn parser"
-
-	data.LoadData()
 
 	server.ConfigureFlags()
 	for _, optsGroup := range api.CommandLineOptionsGroups {

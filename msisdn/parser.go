@@ -15,9 +15,8 @@ import (
 func ParseMsisdn(params operations.ParseMsisdnParams) middleware.Responder {
 	var msisdn = getClearMsisdn(params.Msisdn)
 
-	parsedMsisdn, err := getParsedMsisdn(msisdn)
+	parsedMsisdn, err := getParsedMsisdn(data.GetInstance(), msisdn)
 	if err != nil {
-		fmt.Sprintf("%s", err)
 		return operations.NewParseMsisdnNotFound().WithPayload(
 			&models.NotFound{
 				int64(operations.ParseMsisdnNotFoundCode),
@@ -27,12 +26,12 @@ func ParseMsisdn(params operations.ParseMsisdnParams) middleware.Responder {
 	return operations.NewParseMsisdnOK().WithPayload(parsedMsisdn)
 }
 
-func getParsedMsisdn(msisdn string) (*models.ParsedMsisdn, error) {
-	var carrier = data.GetCarrier(msisdn)
+func getParsedMsisdn(dataStruct data.DataGetter, msisdn string) (*models.ParsedMsisdn, error) {
+	var carrier = dataStruct.GetCarrier(msisdn)
 	if carrier == nil {
 		return nil, errors.New(fmt.Sprintf("MSISDN %s can't be parsed", msisdn))
 	}
-	var isoCode = data.GetCountryIsoCode(carrier.CountryCode)
+	var isoCode = dataStruct.GetCountryIsoCode(carrier.CountryCode)
 	var parsedMsisdn = &models.ParsedMsisdn{
 		CountryCode:      carrier.CountryCode,
 		CountryID:        *isoCode,

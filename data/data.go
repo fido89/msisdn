@@ -9,25 +9,39 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
-var carriers map[string]string
-var carrierMaxLenght = 0
+var instance *Data
+var once sync.Once
 
-var countryIsoCodes map[string]string
+func GetInstance() *Data {
+	once.Do(func() {
+		instance = &Data{}
+		instance.loadCarrierData()
+		instance.loadCountryIsoIds()
+	})
+	return instance
+}
 
-type carrier struct {
+type DataGetter interface {
+	GetCarrier(string) *Carrier
+	GetCountryIsoCode(string) *string
+}
+
+type Data struct {
+	carriers         map[string]string
+	carrierMaxLenght int
+	countryIsoCodes  map[string]string
+}
+
+type Carrier struct {
 	CountryCode string
 	CarrierMNO  string
 }
 
-func LoadData() {
-	loadCarrierData()
-	loadCountryIsoIds()
-}
-
-func loadCarrierData() {
-	carriers = make(map[string]string)
+func (d *Data) loadCarrierData() {
+	d.carriers = make(map[string]string)
 	root := "./data/carrier"
 	files, err := ioutil.ReadDir(root)
 	if err != nil {
@@ -48,55 +62,61 @@ func loadCarrierData() {
 		scanner.Split(bufio.ScanLines)
 
 		for scanner.Scan() {
-			var line = scanner.Text()
-			if len(strings.TrimSpace(line)) == 0 || strings.HasPrefix(line, "#") {
-				continue
-			}
-			var splitedLine = strings.Split(line, "|")
-			carriers[splitedLine[0]] = f.Name()[:strings.IndexByte(f.Name(), '.')]
+			carrierData, countryCode := getCarrierAndCountryCode(scanner.Text(), f.Name())
+			if carrierData != nil {
+				d.carriers[*carrierData] = *countryCode
 
-			if len(splitedLine[0]) > carrierMaxLenght {
-				carrierMaxLenght = len(splitedLine[0])
+				if len(*carrierData) > d.carrierMaxLenght {
+					d.carrierMaxLenght = len(*carrierData)
+				}
 			}
 		}
-
 		file.Close()
 	}
 }
 
-func loadCountryIsoIds() {
+func getCarrierAndCountryCode(line string, fileName string) (*string, *string) {
+	if len(strings.TrimSpace(line)) == 0 || strings.HasPrefix(line, "#") {
+		return nil, nil
+	}
+	var lineWithCarrierData = strings.Split(line, "|")
+	var countryCode = fileName[:strings.IndexByte(fileName, '.')]
+	return &lineWithCarrierData[0], &countryCode
+}
+
+func (d *Data) loadCountryIsoIds() {
 	jsonFile, err := os.Open("./data/country-calling-codes.json")
 	if err != nil {
 		log.Fatalf("failed opening file: %s", err)
 	}
 
-	countryIsoCodes = make(map[string]string)
+	d.countryIsoCodes = make(map[string]string)
 	var results []map[string]interface{}
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
 	json.Unmarshal(byteValue, &results)
 	for _, result := range results {
-		countryIsoCodes[fmt.Sprintf("%v", result["callingCode"])] = fmt.Sprintf("%v", result["code"])
+		d.countryIsoCodes[fmt.Sprintf("%v", result["callingCode"])] = fmt.Sprintf("%v", result["code"])
 	}
 }
 
-func GetCarrier(msisdn string) *carrier {
-	var carrierMaxLenghtLocal = carrierMaxLenght
+func (d *Data) GetCarrier(msisdn string) *Carrier {
+	var carrierMaxLenghtLocal = d.carrierMaxLenght
 	if len(msisdn) < carrierMaxLenghtLocal {
 		carrierMaxLenghtLocal = len(msisdn)
 	}
 
 	for i := carrierMaxLenghtLocal; i > 0; i-- {
-		cc, exists := carriers[msisdn[:i]]
+		cc, exists := d.carriers[msisdn[:i]]
 		if exists {
-			return &carrier{CountryCode: cc, CarrierMNO: strings.TrimLeft(msisdn[:i], cc)}
+			return &Carrier{CountryCode: cc, CarrierMNO: strings.TrimPrefix(msisdn[:i], cc)}
 		}
 	}
 	return nil
 }
 
-func GetCountryIsoCode(callingCode string) *string {
-	iso, exists := countryIsoCodes[callingCode]
+func (d *Data) GetCountryIsoCode(callingCode string) *string {
+	iso, exists := d.countryIsoCodes[callingCode]
 	if exists {
 		return &iso
 	}
